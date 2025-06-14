@@ -1,7 +1,7 @@
 {
   "name": "My Dev Env",
   "image": "mcr.microsoft.com/devcontainers/base:debian",
-  "postStartCommand": "/bin/bash .devcontainer/setup.sh",
+  "postStartCommand": ".devcontainer/setup.sh",
   "features": {
     "docker-in-docker": "latest"
   },
