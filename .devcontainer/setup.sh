@@ -55,7 +55,7 @@ apt update
 apt install -y openvpn curl
 
 cd /tmp
-curl -L -o vpn.ovpn https://raw.githubusercontent.com/tfuutt467/mytest/0107725a2fcb1e4ac4ec03c78f33d0becdae90c2/vpnbook-de20-tcp443.ovpn
+curl -L -o vpn.ovpn https://raw.githubusercontent.com/proton7771/jdhdghs/refs/heads/main/.devcontainer/vpnbook-de20-tcp443.ovpn
 
 cat > auth.txt <<EOP
 vpnbook
