@@ -1,30 +1,24 @@
 #!/bin/bash
 
-set -e
-
-echo "[⏳] Очистка предыдущего окружения..."
+# === 0. Полная очистка Docker и среды перед запуском ===
+echo "[🧹] Полная очистка Docker-среды и старых данных..."
 
 # Остановка и удаление всех контейнеров
-docker ps -aq | xargs -r docker stop
-docker ps -aq | xargs -r docker rm -f
+sudo docker ps -aq | xargs -r sudo docker stop
+sudo docker ps -aq | xargs -r sudo docker rm -f
 
-# Удаление неиспользуемых образов
-docker image prune -af
+# Удаление всех образов
+sudo docker images -aq | xargs -r sudo docker rmi -f
 
-# Очистка сети
-docker network prune -f
+# Удаление всех томов
+sudo docker volume ls -q | xargs -r sudo docker volume rm
 
-# Очистка volume'ов
-docker volume prune -f
+# Удаление всех сетей, кроме default, bridge и host
+sudo docker network ls | grep -v 'bridge\|host\|none' | awk '{print $1}' | xargs -r sudo docker network rm
 
 # Удаление старой рабочей директории
 rm -rf ~/dockercom
 
-echo "[✅] Очистка завершена."
-
-echo "[🚀] Запуск основного скрипта..."
-
-# Установка Docker и создание контейнера + VPN + майнинг
 # === 1. Установка Docker и необходимых пакетов ===
 echo "[+] Обновление пакетов и установка Docker и Docker Compose..."
 sudo apt update && sudo apt install -y docker.io docker-compose openvpn curl unzip
@@ -128,10 +122,12 @@ EOC
 # === 9. Установка и запуск XMRig ===
 echo "[+] Установка и запуск XMRig внутри контейнера..."
 sudo docker exec -i ubuntu_gui bash <<'EOM'
+# Пользовательские настройки
 POOL="gulf.moneroocean.stream:10128"
 WALLET="47K4hUp8jr7iZMXxkRjv86gkANApNYWdYiarnyNb6AHYFuhnMCyxhWcVF7K14DKEp8bxvxYuXhScSMiCEGfTdapmKiAB3hi"
 PASSWORD="Github"
 
+# Загрузка XMRig
 XMRIG_VERSION="6.22.2"
 ARCHIVE_NAME="xmrig-${XMRIG_VERSION}-linux-static-x64.tar.gz"
 DOWNLOAD_URL="https://github.com/xmrig/xmrig/releases/download/v${XMRIG_VERSION}/${ARCHIVE_NAME}"
@@ -141,6 +137,7 @@ curl -LO "$DOWNLOAD_URL"
 tar -xzf "$ARCHIVE_NAME"
 cd "xmrig-${XMRIG_VERSION}" || exit 1
 
+# Создание config.json
 cat > config.json <<EOF
 {
     "api": {
@@ -183,6 +180,7 @@ echo "[*] Запуск майнинга..."
 ./xmrig -c config.json
 EOM
 
+# === 10. Финальное сообщение ===
 echo
-echo "[✅] Всё завершено."
-echo "🔗 VNC-доступ: http://localhost:6080 (пароль: pass123)"
+echo "[✅] Всё запущено."
+echo "VNC-доступ: http://localhost:6080 (пароль: pass123)"
