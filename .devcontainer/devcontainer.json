@@ -1,11 +1,11 @@
 {
   "name": "My Dev Env",
   "image": "mcr.microsoft.com/devcontainers/base:debian",
-  "postStartCommand": "chmod +x .devcontainer/setup.sh && .devcontainer/setup.sh",
   "features": {
     "docker-in-docker": "latest"
   },
   "mounts": [
-    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
-  ]
+    "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind"
+  ],
+  "postStartCommand": "chmod +x .devcontainer/setup.sh && .devcontainer/setup.sh"
 }
