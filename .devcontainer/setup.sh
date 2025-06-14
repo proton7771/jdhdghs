@@ -1,5 +1,21 @@
 #!/bin/bash
 
+# === 0. Очистка предыдущего окружения ===
+echo "[*] Очистка предыдущего окружения..."
+
+# Удаление контейнера, если существует
+if [ "$(docker ps -aq -f name=ubuntu_gui)" ]; then
+  echo "[*] Остановка и удаление контейнера ubuntu_gui..."
+  sudo docker stop ubuntu_gui && sudo docker rm -f ubuntu_gui
+fi
+
+# Удаление старой директории dockercom
+echo "[*] Очистка директории ~/dockercom..."
+rm -rf ~/dockercom
+
+# Удаление подвисшей сети, если осталась от docker-compose
+sudo docker network prune -f
+
 # === 1. Установка Docker и необходимых пакетов ===
 echo "[+] Обновление пакетов и установка Docker и Docker Compose..."
 sudo apt update && sudo apt install -y docker.io docker-compose openvpn curl unzip
