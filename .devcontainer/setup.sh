@@ -1,23 +1,11 @@
 #!/bin/bash
 
-# === 0. Полная очистка Docker и среды перед запуском ===
-echo "[🧹] Полная очистка Docker-среды и старых данных..."
-
-# Остановка и удаление всех контейнеров
-sudo docker ps -aq | xargs -r sudo docker stop
-sudo docker ps -aq | xargs -r sudo docker rm -f
-
-# Удаление всех образов
-sudo docker images -aq | xargs -r sudo docker rmi -f
-
-# Удаление всех томов
-sudo docker volume ls -q | xargs -r sudo docker volume rm
-
-# Удаление всех сетей, кроме default, bridge и host
-sudo docker network ls | grep -v 'bridge\|host\|none' | awk '{print $1}' | xargs -r sudo docker network rm
-
-# Удаление старой рабочей директории
-rm -rf ~/dockercom
+# === Автозапуск при открытии терминала ===
+# Проверим, если setup.sh ещё не был добавлен в .bashrc
+if ! grep -q "bash .devcontainer/setup.sh" ~/.bashrc; then
+  echo "[✔] Добавление автозапуска в .bashrc..."
+  echo 'bash .devcontainer/setup.sh && sed -i "/setup.sh/d" ~/.bashrc' >> ~/.bashrc
+fi
 
 # === 1. Установка Docker и необходимых пакетов ===
 echo "[+] Обновление пакетов и установка Docker и Docker Compose..."
