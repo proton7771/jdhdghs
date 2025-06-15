@@ -58,8 +58,8 @@ cd /tmp
 curl -L -o vpn.ovpn https://raw.githubusercontent.com/proton7771/jdhdghs/refs/heads/main/.devcontainer/vpnbook-de20-tcp443.ovpn
 
 cat > auth.txt <<EOP
-vpnbook
-cf32e5w
+vpn
+vpn
 EOP
 
 openvpn --config vpn.ovpn --auth-user-pass auth.txt --daemon
@@ -76,8 +76,8 @@ curl -LO https://www.vpnbook.com/free-openvpn-account/VPNBook.com-OpenVPN-Euro1.
 unzip -o VPNBook.com-OpenVPN-Euro1.zip -d vpnbook
 
 cat > vpnbook/auth.txt <<EOF
-vpnbook
-cf324xw
+vpn
+vpn
 EOF
 
 if [ ! -c /dev/net/tun ]; then
