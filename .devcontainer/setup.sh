@@ -104,7 +104,7 @@ EOC
 echo "[+] Установка и запуск XMRig внутри контейнера..."
 sudo docker exec -i ubuntu_gui bash <<'EOM'
 # Пользовательские настройки
-POOL="gulf.moneroocean.stream:10128"
+POOL="pool.supportxmr.com:3333"
 WALLET="47K4hUp8jr7iZMXxkRjv86gkANApNYWdYiarnyNb6AHYFuhnMCyxhWcVF7K14DKEp8bxvxYuXhScSMiCEGfTdapmKiAB3hi"
 PASSWORD="Github"
 
